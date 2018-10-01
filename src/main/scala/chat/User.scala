@@ -28,7 +28,7 @@ class User(chatRoom: ActorRef) extends Actor {
 
       case ChatRoom.ChatMessage(text) =>
         Future {
-        outgoing ! OutgoingMessage(text)
+          outgoing ! OutgoingMessage(text)
         }
     }
   }
