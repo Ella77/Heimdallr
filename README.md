@@ -1,29 +1,13 @@
 # ChatServ #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+a large-scale chatting server based on Akka toolkits.
 
-### What is this repository for? ###
+### Getting Started ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+Clone the repository with following command:
 
-### How do I get set up? ###
+% git clone git@bitbucket.org:spooncast/spooncast-server-akkachat.git
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+and try to build with sbt:
 
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+% sbt run
