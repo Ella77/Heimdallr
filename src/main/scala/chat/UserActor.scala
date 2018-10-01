@@ -4,15 +4,15 @@ import akka.actor.{Actor, ActorRef}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
-object User {
+object UserActor {
   case class Connected(outgoing: ActorRef)
   case class IncomingMessage(text: String)
   case class OutgoingMessage(text: String)
 }
 
-class User(chatRoom: ActorRef) extends Actor {
+class UserActor(chatRoom: ActorRef) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
-  import User._
+  import UserActor._
 
   def receive = {
     case Connected(outgoing) =>
@@ -20,13 +20,13 @@ class User(chatRoom: ActorRef) extends Actor {
   }
 
   def connected(outgoing: ActorRef): Receive = {
-    chatRoom ! ChatRoom.Join
+    chatRoom ! ChatRoomActor.Join
 
     {
       case IncomingMessage(text) =>
-        chatRoom ! ChatRoom.ChatMessage(text)
+        chatRoom ! ChatRoomActor.ChatMessage(text)
 
-      case ChatRoom.ChatMessage(text) =>
+      case ChatRoomActor.ChatMessage(text) =>
         Future {
           outgoing ! OutgoingMessage(text)
         }
@@ -34,4 +34,3 @@ class User(chatRoom: ActorRef) extends Actor {
   }
 
 }
-

@@ -4,14 +4,14 @@ import akka.actor._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
-object ChatRoom {
+object ChatRoomActor {
   case object Join
   case class ChatMessage(message: String)
 }
 
-class ChatRoom extends Actor {
+class ChatRoomActor extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
-  import ChatRoom._
+  import ChatRoomActor._
   var users: Set[ActorRef] = Set.empty
 
   def receive = {
