@@ -8,7 +8,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream._
 import akka.stream.scaladsl._
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import scala.io.StdIn
@@ -17,7 +16,7 @@ import com.typesafe.config.ConfigFactory
 object Server {
   def main(args: Array[String]): Unit = {
 
-    implicit val system = ActorSystem("mychat", ConfigFactory.load())
+    implicit val system = ActorSystem("spoonchat", ConfigFactory.load())
     implicit val materializer = ActorMaterializer()
 
     println (system.settings.config.getValue("akka.loggers"))
@@ -33,6 +32,7 @@ object Server {
           // transform websocket message to domain message
           case TextMessage.Strict(text) => UserActor.IncomingMessage(text)
         }.to(Sink.actorRef[UserActor.IncomingMessage](userActor, PoisonPill))
+          // PoisonPill asynchronously stops disconnected user actor
 
       val outgoingMessages: Source[Message, NotUsed] =
         Source.actorRef[UserActor.OutgoingMessage](10000, OverflowStrategy.fail)

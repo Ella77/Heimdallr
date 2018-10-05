@@ -1,8 +1,9 @@
 package chat
 
 import akka.actor._
-import scala.concurrent.Future
+
 import scala.concurrent.ExecutionContext
+import com.redis.RedisClient
 
 object ChatRoomActor {
   case object Join
@@ -11,8 +12,14 @@ object ChatRoomActor {
 
 class ChatRoomActor extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
+
   import ChatRoomActor._
   var users: Set[ActorRef] = Set.empty
+
+  val r = new RedisClient("localhost", 6379)
+  r.set("key1", "abc")
+
+  println("subscribe channel: chat")
 
   def receive = {
     case Join =>
@@ -27,4 +34,3 @@ class ChatRoomActor extends Actor {
       users.foreach(_ ! msg)
   }
 }
-
