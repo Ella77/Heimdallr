@@ -1,6 +1,6 @@
-# ChatServ #
+# Heimdallr #
 
-a large-scale chatting server based on Akka toolkits.
+Heimdallr is a large-scale chat application server written in Scala language based on Akka's actor model. It provides fault-tolerance and reliable scale-out options to support expansion from proof-of-concept to enterprise-ready solutions. 
 
 ### Getting Started ###
 
