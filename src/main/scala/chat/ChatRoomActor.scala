@@ -1,25 +1,61 @@
 package chat
 
-import akka.actor._
 
 import scala.concurrent.ExecutionContext
-import com.redis.RedisClient
+import com.redis._
+import akka.actor._
 
 object ChatRoomActor {
   case object Join
-  case class ChatMessage(message: String)
+  case class ChatMessage(message:String)
 }
-
-class ChatRoomActor extends Actor {
+class ChatRoomActor  extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
+//  implicit val system = ActorSystem("spoonchat", ConfigFactory.load())
 
-  import ChatRoomActor._
+  import ChatRoomActor ._
   var users: Set[ActorRef] = Set.empty
 
-  val r = new RedisClient("localhost", 6379)
-  r.set("key1", "abc")
+  // TODO make this configurable
+  val s = new RedisClient("192.168.0.116", 6379)
+  val p = new RedisClient("192.168.0.116", 6379)
 
-  println("subscribe channel: chat")
+  s.subscribe("chat") {
+    case S(channel, no) => println("subscribed to " + channel + " and count = " + no)
+    case U(channel, no) => println("unsubscribed from " + channel + " and count = " + no)
+    case E(exception) => println(exception + "Fatal error caused consumer dead. " +
+      "Need to reconnecting to master or connect to backup")
+
+    case M(channel, msg) =>
+      msg match {
+        // exit will unsubscribe from all channels and stop subscription service
+        case "exit" =>
+          println("unsubscribe all ..")
+          s.unsubscribe()
+        case x if x startsWith "-" =>
+          val p : Seq[Char] = x
+          p match {
+            case Seq('-', rest @ _*)=>
+              s.unsubscribe(rest.toString)
+
+          }
+        case x if x startsWith "+" =>
+          val p : Seq[Char] = x
+          p match {
+            case Seq('+', rest @ _*)=>
+              s.subscribe(rest.toString){m => }
+
+          }
+
+
+        // if message is coming from others, broadcast to locally connected users
+        case x =>
+          println("received message on channel " + channel + " as : " + x)
+          println("broadcast message")
+          users.foreach(_ ! ChatRoomActor.ChatMessage(x))
+
+      }
+  }
 
   def receive = {
     case Join =>
@@ -31,6 +67,10 @@ class ChatRoomActor extends Actor {
       users -= user
 
     case msg: ChatMessage =>
+      // sync local message with others
+      p.publish("chat", msg.message);
       users.foreach(_ ! msg)
   }
+
 }
+
