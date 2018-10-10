@@ -20,13 +20,13 @@ class UserActor(chatRoom: ActorRef) extends Actor {
   }
 
   def connected(outgoing: ActorRef): Receive = {
-    chatRoom ! ChatRoomActor.Join
+    chatRoom ! chatroom.Join
 
     {
       case IncomingMessage(text) =>
-        chatRoom ! ChatRoomActor.ChatMessage(text)
+        chatRoom ! chatroom.ChatMessage(text)
 
-      case ChatRoomActor.ChatMessage(text) =>
+      case chatroom.ChatMessage(text) =>
         Future {
           outgoing ! OutgoingMessage(text)
         }

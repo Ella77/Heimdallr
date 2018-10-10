@@ -55,10 +55,10 @@ object Server {
         }
       }
 
-    val binding = Await.result(Http().bindAndHandle(route, "0.0.0.0", 8080), 30.seconds)
+    val binding = Await.result(Http().bindAndHandle(route, "0.0.0.0", 8000), 30.seconds)
 
     // the rest of the sample code will go here
-    println("Started server at 127.0.0.1:8080, press enter to kill server")
+    println("Started server , press enter to kill server")
     StdIn.readLine()
     system.terminate()
   }

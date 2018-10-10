@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta charset="utf-8">
+    <title>스푼 라디오</title>
+
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" >
+
+    <meta name="title" content="스푼 라디오" >
+    <meta name="subject" content="듣기만 하는 라디오는 안녕! LIVE로 즐기는 하나뿐인 개인 라디오,스푼" >
+    <meta name="description" content="영상보다 재밌는 요즘 라디오! 스푼. 심심하고 지루하고 그럴 땐 LIVE로 즐기는 개인 라디오 스푼을 즐겨보세요." >
+    <meta name="keywords" content="스푼,라디오,개인,방송,BJ,비제이,라이브,오디오,live,캐스트,음성,실시간" >
+    <meta name="author" content="Spoon On Air" >
+    <meta name="copyright" content="Spoon On Air" >
+
+    <!-- Facebook Meta Tag -->
+    <meta property="og:title" content="스푼 라디오" >
+    <meta property="og:url" content="http://www.spooncast.net/" >
+    <meta property="og:description" content="영상보다 재밌는 요즘 라디오! 스푼. 심심하고 지루하고 그럴 땐 LIVE로 즐기는 개인 라디오 스푼을 즐겨보세요." >
+    <meta property="og:image" content="http://www.spooncast.net/kr_share_default.png" >
+    <meta property="og:image:width" content="600" >
+    <meta property="og:image:height" content="315" >
+
+    <!-- Twitter Meta Tag -->
+    <meta name="twitter:card" content="summary_large_image" >
+    <meta name="twitter:creator" content="Spoon On Air" >
+    <meta name="twitter:title" content="스푼 라디오" >
+    <meta name="twitter:site" content="http://www.spooncast.net/" >
+    <meta name="twitter:description" content="영상보다 재밌는 요즘 라디오! 스푼. 심심하고 지루하고 그럴 땐 LIVE로 즐기는 개인 라디오 스푼을 즐겨보세요." >
+    <meta name="twitter:image" content="http://www.spooncast.net/kr_share_default.png" >
+
+    <meta name="robots" content="index,nofollow" >
+    <meta name="googlebot" content="index,nofollow" >
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.slim.js"></script>
+    <script>
+        //   var socket = window.io('http://ec2-54-180-79-43.ap-northeast-2.compute.amazonaws.com:3000/');
+        var socket = window.io('http://localhost:8080')
+        //   var socket = window.io('wss://devchat.spooncast.net/', {transports:['websocket']}, {'force new connection': true});
+    </script>
+
+
+
+</head>
+<body>
+<h1>
+    채팅 테스트
+</h1>
+
+<div>
+    <h3>
+        라이브 아이디
+    </h3>
+    <div style="display: flex; align-items: center;">
+        <input id="live-id" type="number" value="" style="width: 100px; line-height: 20px;">
+        <a
+                title="참여"
+                style="padding: 0 10px; margin-left: 10px; line-height: 24px; color: #fff; background-color: #fcba3d; cursor: pointer;"
+                onClick="javascript: liveJoin();"
+        >
+            참여
+        </a>
+    </div>
+</div>
+
+<div>
+    <h3>
+        라이브 나가기
+    </h3>
+    <div style="display: flex; align-items: center;">
+        <a
+                title="라이브 나가기"
+                style="padding: 0 10px; line-height: 24px; color: #fff; background-color: #fcba3d; cursor: pointer;"
+                onClick="javascript: liveLeave();"
+        >
+            라이브 나가기
+        </a>
+    </div>
+</div>
+
+<div>
+    <h3>
+        유저 토큰
+    </h3>
+    <div style="display: flex; align-items: center;">
+        <input id="token" type="text" value="" style="width: 300px; line-height: 20px;">
+    </div>
+</div>
+
+<div>
+    <h3>
+        메세지
+    </h3>
+    <div style="display: flex; align-items: center;">
+        <input id="message" type="text" value="" style="width: 300px; line-height: 20px;">
+        <a
+                title="전송"
+                style="padding: 0 10px; margin-left: 10px; line-height: 24px; color: #fff; background-color: #fcba3d; cursor: pointer;"
+                onClick="javascript: sendMessage();"
+        >
+            전송
+        </a>
+    </div>
+</div>
+
+<div>
+    <h3>
+        메세지 전송 반복 횟수
+    </h3>
+    <div style="display: flex; align-items: center;">
+        <input id="repeat-count" type="number" value="" style="width: 100px; line-height: 20px;">
+    </div>
+</div>
+
+<script>
+    var socket = null;
+
+    // 소켓 연결
+    function socketConnect() {
+        if (socket) {
+            socketDisconnect();
+        };
+        var socket = window.io('http://localhost:8080')
+        var socket = new Websocket('ws://192.168.0.116:8080/');
+//       socket = window.io('wss://devchat.spooncast.net/', {transports:['websocket']}, {'force new connection': true});
+
+        // 이벤트 리스너
+        // 접속
+        socket.on('connect', function() {
+            console.log('ON connect');
+        });
+        // 접속 해제
+        socket.on('disconnect', function(res) {
+            console.log('ON disconnect ', res);
+        });
+        // 입장
+        socket.on('live_join', function(res) {
+            console.log('ON live_join ', res);
+        });
+        // 퇴장
+        socket.on('live_leave', function(res) {
+            console.log('ON live_leave ', res);
+        });
+        // 메세지
+        socket.on('live_message', function(res) {
+            console.log('ON live_message ', res);
+        });
+
+
+        // 선물하기
+        socket.on('live_present', function(res) {
+            console.log('ON live_present ', res);
+        });
+        // 좋아요
+        socket.on('live_like', function(res) {
+            console.log('ON live_like ', res);
+        });
+        // 강퇴
+        socket.on('live_block', function(res) {
+            console.log('ON live_block ', res);
+        });
+        // 라이브 정보 업데이트
+        socket.on('live_update', function(res) {
+            console.log('ON live_update ', res);
+        });
+        // 라이브 종료
+        socket.on('live_closed', function(res) {
+            console.log('ON live_closed ', res);
+        });
+    }
+
+    // 소켓 디스커넥트
+    function socketDisconnect() {
+        if (socket) {
+            socket.disconnect();
+            socket = null;
+        };
+    }
+
+    // 라이브 조인
+    function liveJoin() {
+
+        var token = document.getElementById('live-id').value;
+        var liveId = parseInt(document.getElementById('live-id').value);
+        console.log(liveId+'joining')
+        if (!liveId) return;
+
+        var params = {
+            live_id: liveId
+        };
+
+        /*
+              if (token) {
+                params.token = token
+              };
+        */
+
+        console.log(liveId+ 'liveJoin');
+
+        socket.emit('live_join', JSON.stringify(params));
+    }
+
+    // 라이브 리브
+    function liveLeave() {
+        var liveId = parseInt(document.getElementById('live-id').value);
+
+        socket.send('live_leave');
+        console.log(liveId+'liveLeave')
+    }
+
+    // 메세지 보내기
+    function sendMessage() {
+        var message = document.getElementById('message').value;
+        var repeatCount = parseInt(document.getElementById('repeat-count').value);
+        var liveId = parseInt(document.getElementById('live-id').value);
+        console.log('sendMessage');
+
+        var msg = {
+            type : "messsage",
+            text : message,
+            id : liveId,
+            date : Date.now()
+        };
+
+        socket.send(JSON.stringify(msg))
+        document.getElementById('message').value = "";
+
+        for (var i=0; i < repeatCount; i++) {
+            console.log('emit...');
+            socket.send('live_message', message);
+        };
+
+        console.log(liveId+'sendMessage Complete ', message, repeatCount)
+    };
+    // 소켓 연결
+    socketConnect();
+
+</script>
+</body>
+</html>
