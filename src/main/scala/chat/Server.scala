@@ -28,6 +28,8 @@ import scala.concurrent.duration._
 import scala.concurrent.Await
 import scala.io.StdIn
 import com.typesafe.config.ConfigFactory
+import scala.util.{Failure,Success}
+import scala.concurrent.ExecutionContext.Implicits._
 
 object Server {
   def main(args: Array[String]): Unit = {
@@ -35,9 +37,11 @@ object Server {
     implicit val system = ActorSystem("heimdallr", ConfigFactory.load())
     implicit val materializer = ActorMaterializer()
 
-    val chatRoom = system.actorOf(Props(new ChatRoomActor), "chat")
+    var chatRooms: Map[Int, ActorRef] = Map.empty[Int, ActorRef]
 
-    def newUser(): Flow[Message, Message, NotUsed] = {
+    def newUser(chatRoomID: Int): Flow[Message, Message, NotUsed] = {
+       // Gets chatroom actor reference
+      val chatRoom = getChatRoomActorRef(chatRoomID)
       // new connection - new user actor
       val userActor = system.actorOf(Props(new UserActor(chatRoom)))
 
@@ -62,19 +66,33 @@ object Server {
       Flow.fromSinkAndSource(incomingMessages, outgoingMessages)
     }
 
+    def getChatRoomActorRef(number:Int): ActorRef = {
+      chatRooms.getOrElse (number, createNewChatRoom (number) )
+    }
+
+    def createNewChatRoom(number: Int): ActorRef = {
+      val chatroom = system.actorOf(Props(new ChatRoomActor), "chat" + number)
+      chatRooms += number -> chatroom
+      chatroom
+    }
+
     val route =
-      path("chat") {
-        get {
-          handleWebSocketMessages(newUser())
+      pathPrefix(IntNumber) {
+        chatRoomID => {
+          handleWebSocketMessages(newUser(chatRoomID))
         }
       }
 
-    val binding = Await.result(Http().bindAndHandle(route, "0.0.0.0", 8080), 30.seconds)
+    val binding = Http().bindAndHandle(route, "0.0.0.0", 8080)
 
     // the rest of the sample code will go here
-    println("Started server at 127.0.0.1:8080, press enter to kill server")
-    StdIn.readLine()
-    system.terminate()
+     binding.onComplete{
+      case Success(binding) =>
+        val localAddress = binding.localAddress
+        println(s"Server is listening on ${localAddress.getHostName}:${localAddress.getPort}")
+      case Failure(e) =>
+        println(s"Binding failed with ${e.getMessage}")
+        system.terminate()
+     }
   }
-
 }

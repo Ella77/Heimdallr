@@ -1,6 +1,6 @@
 # Heimdallr
 
-Heimdallr is a large-scale chat application server inspired by the LINE+ chatting service architecture and written in Scala language based on Akka's actor model. It provides fault-tolerant and reliable scaling-out options, based on Redis Pubsub to support expansion from proof-of-concept to enterprise-ready solutions. It has been tested to be at least 100x faster than socket.io for large-scale systems. This project is licensed under the Apache License v2.0. https://www.apache.org/licenses/LICENSE-2.0.txt
+Heimdallr is a large-scale chat application server inspired by the LINE+ chatting service architecture and written in Scala language based on Akka's actor model. It provides fault-tolerant and reliable scaling-out options, based on Redis Pubsub to support expansion from proof-of-concept to enterprise-ready solutions. It has been tested to be at least 100x faster than socket.io for large-scale systems. This project is licensed under the Apache License v2.0.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Clone the repository and try to build with sbt:
 
 `% sbt run`
 
-To setup a websocket load balancer, you can use Apache2 HTTPD with proxy modules. Enable modules with the following command: `sudo a2enmod proxy proxy_http proxy_wstunnel proxy_balancer lbmethod_byrequests`
+To setup a websocket load balancer, you can use Apache2 HTTPD with proxy modules. Enable modules with the following command: `sudo a2enmod rewrite proxy proxy_http proxy_wstunnel proxy_balancer lbmethod_byrequests`
 
 And edit the virtual host file like below:
 
@@ -49,8 +49,12 @@ And edit the virtual host file like below:
         CustomLog ${APACHE_LOG_DIR}/access.log combined
 
         <IfModule proxy_module>
+                RewriteEngine On
+                RewriteCond %{REQUEST_URI} !^/
+                RewriteRule ^(.*)$ /$1 [P]
+
                 ProxyRequests Off
-                ProxyPass "/chat" balancer://mycluster/chat
+                ProxyPass "/" balancer://mycluster/
 
                 <Proxy "balancer://mycluster">
                         BalancerMember ws://{HEIMDALLR_SERVER_ADDRESS_1}:8080
@@ -64,3 +68,23 @@ And edit the virtual host file like below:
 To enable the Redis PubSub, open the application.conf file and edit the Redis IP address and port like below:
 
 `redis-ip = "{REDIS_IP_ADDRESS}"` and `redis-port = 6379`
+
+### Java Websocket Client Example
+
+In this example, Java-WebSocket library was used.
+
+```Java
+public class WSClientSample extends WebSocketClient {
+
+  public WSClientSample(URI serverURI) {
+    super(serverURI);
+  }
+  ...
+  
+  public static void main(String[] args) throws Exception {
+    String uri = ("ws://APACHE_WEBSERVERR/{CHATROOMID}");
+    WSClientSample c = new WSClientSample(new URI(uri));
+    c.connect();
+  }
+}
+```
