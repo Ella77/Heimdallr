@@ -26,16 +26,21 @@ import com.typesafe.config.ConfigFactory
 object ChatRoomActor {
   case object Join
   case class ChatMessage(message: String)
+//  def apply(roomId:Int) = new ChatRoomActor(roomId)
 }
 
-class ChatRoomActor extends Actor {
+class ChatRoomActor(roomId: Int) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   implicit val system = ActorSystem("heimdallr", ConfigFactory.load())
 
   import ChatRoomActor._
+
   var users: Set[ActorRef] = Set.empty
 
-  val chatRoomName = self.path.name
+  var chatRoomName = self.path.name
+  //  var chatRoomName = self.path.name
+  println("path"+chatRoomName)
+  //  val chatRoomName = self.path.name
   var redisIp = system.settings.config.getString("akka.redis-ip")
   var redisPort = system.settings.config.getInt("akka.redis-port")
   val s = new RedisClient(redisIp, redisPort)
@@ -56,22 +61,22 @@ class ChatRoomActor extends Actor {
             s.unsubscribe
 
           case x if x startsWith "-" =>
-            val p : Seq[Char] = x
+            val p: Seq[Char] = x
             p match {
-              case Seq('-', rest @ _*)=>
+              case Seq('-', rest@_*) =>
                 s.unsubscribe(rest.toString)
             }
 
           case x if x startsWith "+" =>
-            val p : Seq[Char] = x
+            val p: Seq[Char] = x
             p match {
-              case Seq('+', rest @ _*)=>
-                s.subscribe(rest.toString){m => }
+              case Seq('+', rest@_*) =>
+                s.subscribe(rest.toString) { m => }
             }
-            
+
           // TODO if message is coming from others, broadcast to locally connected users
           case x =>
-            println("received message on channel " + channel + " as : " + x)
+            println("received message on channel " + channel + " as : " + x+users)
             users.foreach(_ ! ChatRoomActor.ChatMessage(x))
         }
     }
@@ -88,8 +93,10 @@ class ChatRoomActor extends Actor {
 
     case msg: ChatMessage =>
       // sync local message with others
-      p.publish(chatRoomName, msg.message);
-      users.foreach(_ ! msg)
+      p.publish(chatRoomName, msg.message)
+      broadcast(msg)
   }
 
+
+  def broadcast(message: ChatMessage) : Unit = users.foreach(_ ! message)
 }
