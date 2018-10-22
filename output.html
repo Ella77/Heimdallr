@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+</head>
+<script>
+
+    function calculate(){
+        user = document.getElementsByName('userbox');
+        player = document.getElementsByName('playerbox');
+        situation = document.getElementsByName('situation');
+
+
+        frame(user,player,situation)
+         var f = document.getElementById("resultbox").contentDocument;
+         f.writeln(user);
+        f.writeln(player);
+        f.writeln(situation);
+    }
+
+</script>
+<body>
+<div>
+Search: <input type="text" name="userbox">
+        <input type="text" name="playerbox">
+        <input type="text" name="situation">
+    <input type="button" onClick="calculate()">
+
+<input type="submit" value="Submit">
+</div>
+    <iframe class="messages" id="resultbox"></iframe>
+</form>
+</body>
+</html>

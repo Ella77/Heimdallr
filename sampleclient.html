@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+   <meta charset=“utf-8”>
+   <title>스푼 라디오</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" >
+
+<meta name="title" content="스푼 라디오" >
+<meta name="subject" content="듣기만 하는 라디오는 안녕! LIVE로 즐기는 하나뿐인 개인 라디오,스푼" >
+<meta name="description" content="영상보다 재밌는 요즘 라디오! 스푼. 심심하고 지루하고 그럴 땐 LIVE로 즐기는 개인 라디오 스푼을 즐겨보세요." >
+<meta name="keywords" content="스푼,라디오,개인,방송,BJ,비제이,라이브,오디오,live,캐스트,음성,실시간" >
+<meta name="author" content="Spoon On Air" >
+<meta name="copyright" content="Spoon On Air" >
+
+<!-- Facebook Meta Tag -->
+<meta property="og:title" content="스푼 라디오" >
+<meta property="og:url" content="http://www.spooncast.net/" >
+<meta property="og:description" content="영상보다 재밌는 요즘 라디오! 스푼. 심심하고 지루하고 그럴 땐 LIVE로 즐기는 개인 라디오 스푼을 즐겨보세요." >
+<meta property="og:image" content="http://www.spooncast.net/kr_share_default.png" >
+<meta property="og:image:width" content="600" >
+<meta property="og:image:height" content="315" >
+
+<!-- Twitter Meta Tag -->
+<meta name="twitter:card" content="summary_large_image" >
+<meta name="twitter:creator" content="Spoon On Air" >
+<meta name="twitter:title" content="스푼 라디오" >
+<meta name="twitter:site" content="http://www.spooncast.net/" >
+<meta name="twitter:description" content="영상보다 재밌는 요즘 라디오! 스푼. 심심하고 지루하고 그럴 땐 LIVE로 즐기는 개인 라디오 스푼을 즐겨보세요." >
+<meta name="twitter:image" content="http://www.spooncast.net/kr_share_default.png" >
+
+<meta name="robots" content="index,nofollow" >
+<meta name="googlebot" content="index,nofollow" >
+
+<script>
+ var clientID = 0;
+
+    function zPad(n){
+        if (n<10) return '0'+n;
+        else return n;
+    }
+     function setUsername() {
+        var msg = {
+        name: document.getElementById("name").value,
+        date: Date.now(),
+        id: clientID,
+        type: "username"
+    };
+        connection.send(JSON.stringify(msg));
+}
+
+    // 소켓 연결
+        function socketConnect() {
+
+            var socket = new WebSocket('ws://52.78.219.149/chat');
+
+        }
+        // socket = window.io('wss://devchat.spooncast.net/', {transports:['websocket']}, {'force new connection': true});
+        socket.onopen = function(event){
+              document.getElementById("text").disabled = false;
+              document.getElementById("send").disabled = false;
+    };
+
+    socket.onmessage = function(event){
+        alert("here");
+        var f = document.getElementById("chatbox").contentDocument;
+        var text = "";
+        var msg = JSON.parse(event.data);
+        var time = new Date(msg.date);
+        var timeStr = time.toLocaleTimeString();
+
+        switch (msg.type) {
+            case "id":
+                clientID = msg.id;
+                setUsername();
+                break;
+            case "username":
+                text = "<b>User <em>" + msg.name + "</em> signed in at " + timeStr + "</b><br>";
+                break;
+            case "message":
+                text = "(" + timeStr + ") <b>" + msg.name + "</b>: " + msg.text + "<br>";
+                break;
+            // case "rejectusername":
+            //   text = "<b>Your username has been set to <em>" + msg.name + "</em> because the name you chose is in use.</b><br>"
+            //   break;
+            case "userlist":
+                var ul = "";
+                for (i = 0; i < msg.users.length; i++) {
+                    ul += msg.users[i] + "<br>";
+                }
+                document.getElementById("userlistbox").innerHTML = ul;
+                break;
+        }
+
+        if (text.length) {
+            f.write(text);
+            document.getElementById("chatbox").contentWindow.scrollByPages(1);
+        }
+    };
+        // 이벤트 리스너
+        // 접속
+
+
+    function liveJoin() {
+        var token = document.getElementById('name').value;
+        var liveId = parseInt(document.getElementById('name').value);
+
+        if (!liveId) return;
+
+        var params = {
+            live_id: liveId
+        };
+
+        if (token) {
+            params.token = token
+        }
+        ;
+
+        console.log('liveJoin ', params);
+
+        socket.emit('live_join', JSON.stringify(params));
+    }
+     function liveLeave() {
+      socket.emit('live_leave');
+    }
+
+    // 소켓 디스커넥트
+    // function socketDisconnect() {
+    //     if (socket) {
+    //         socket.disconnect();
+    //         socket = null;
+    //     };
+    // }
+
+
+
+    // 메세지 보내기
+    function sendMessage() {
+        var message = document.getElementById('text').value;
+        var repeatCount = parseInt(document.getElementById('repeat-count').value);
+        var liveId = parseInt(document.getElementById('name').value);
+        console.log('sendMessage');
+
+        var msg = {
+            type : "messsage",
+            text : message,
+            id : clientID,
+            date : Date.now()
+        };
+
+        socket.send(JSON.stringify(msg))
+        document.getElementById('text').value = "";
+
+        for (var i=0; i < repeatCount; i++) {
+            console.log('emit...');
+            socket.send('text', message);
+        };
+
+        console.log(liveId+'sendMessage Complete ', message, repeatCount)
+    }
+    function timestamp(){
+        var d = new Date();
+        return zPad(d.getHours()) + ":"+ zPad(d.getMinutes())+ ":" +zpad(d.getSeconds());
+    }
+
+</script>
+    // 소켓 연결
+
+
+
+
+</head>
+<body>
+<h1>
+   채팅 테스트
+</h1>
+
+<div>
+   <h3>
+       라이브 아이디
+   </h3>
+   <div style=“display: flex; align-items: center;“>
+       <input id=“name” type=“number” value=“” style=“width: 100px; line-height: 20px;“>
+       <a
+               title=“참여”
+               style=“padding: 0 10px; margin-left: 10px; line-height: 24px; color: #fff; background-color: #fcba3d; cursor: pointer;”
+               onClick=“javascript: socketCoconnect();”
+       >
+           참여
+       </a>
+   </div>
+</div>
+
+<div>
+   <h3>
+       라이브 나가기
+   </h3>
+   <div style=“display: flex; align-items: center;“>
+       <a
+               title=“라이브 나가기”
+               style=“padding: 0 10px; line-height: 24px; color: #fff; background-color: #fcba3d; cursor: pointer;”
+               onClick=“javascript: liveLeave();”
+       >
+           라이브 나가기
+       </a>
+   </div>
+</div>
+
+<div>
+   <h3>
+       유저 토큰
+   </h3>
+   <div style=“display: flex; align-items: center;“>
+       <input id=“token” type=“text” value=“” style=“width: 300px; line-height: 20px;“>
+   </div>
+</div>
+
+<div>
+   <h3>
+       메세지
+   </h3>
+   <div style=“display: flex; align-items: center;“>
+       <input id=“text” type=“text” name = “text” value=“” style=“width: 300px; line-height: 20px;“>
+       <a
+               title=“전송” name = “send” id=“send”
+                style=“padding: 0 10px; margin-left: 10px; line-height: 24px; color: #fff; background-color: #fcba3d; cursor: pointer;”
+               onClick=“javascript: sendMessage();”
+       >
+           전송
+       </a>
+   </div>
+</div>
+
+<div>
+   <h3>
+       메세지 전송 반복 횟수
+   </h3>
+   <div style=“display: flex; align-items: center;“>
+       <input id=“repeat-count” type=“number” value=“” style=“width: 100px; line-height: 20px;“>
+   </div>
+</div>
+<h3>
+
+메시지 함 </h3>
+  <iframe width=“100%” height=“400px” id=“chatbox”></iframe>
+   <h3>사용자들 </h3>
+<td width=“120px” align=“top” border=“1" height=“100%“>
+           <div id=“userlistbox” style=“border: 1px solid black; width:100%; height:100%;“></div>
+       </td>
+
+
+</body>
+</html>
+
+
